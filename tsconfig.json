@@ -8,5 +8,5 @@
     "noEmit": true,
     "lib": ["es2022"]
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "worker-configuration.d.ts"]
 }
