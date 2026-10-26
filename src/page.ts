@@ -26,15 +26,16 @@ export const page = `<!doctype html>
 </main>
 <script>
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
 const post = (url, body) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 async function load() {
   const s = await (await fetch("/api/state")).json();
   $("members").innerHTML = s.balances.map(b =>
-    "<li>" + b.name + " <small>" + b.upi + "</small> <b class=" + (b.net < 0 ? "neg" : "pos") + ">₹" + (b.net / 100).toFixed(2) + "</b></li>").join("");
-  $("payer").innerHTML = s.members.map(m => "<option value=" + m.id + ">" + m.name + " paid</option>").join("");
-  $("expenses").innerHTML = s.expenses.map(e => "<li>" + e.payer + " paid ₹" + (e.amount_paise / 100).toFixed(2) + " for " + e.note + "</li>").join("");
+    "<li>" + esc(b.name) + " <small>" + esc(b.upi) + "</small> <b class=" + (b.net < 0 ? "neg" : "pos") + ">" + (b.net < 0 ? "owes ₹" : "gets ₹") + (Math.abs(b.net) / 100).toFixed(2) + "</b></li>").join("");
+  $("payer").innerHTML = s.members.map(m => "<option value=" + m.id + ">" + esc(m.name) + " paid</option>").join("");
+  $("expenses").innerHTML = s.expenses.map(e => "<li>" + esc(e.payer) + " paid ₹" + (e.amount_paise / 100).toFixed(2) + " for " + esc(e.note) + "</li>").join("");
   $("plan").innerHTML = s.plan.length ? s.plan.map(p =>
-    "<li>" + p.from + " pays " + p.to + " <b>₹" + p.amount + "</b><a class=pay href='" + p.link + "'>Pay via UPI</a></li>").join("") : "<li>All settled.</li>";
+    "<li>" + esc(p.from) + " pays " + esc(p.to) + " <b>₹" + p.amount + "</b><a class=pay href='" + esc(p.link) + "'>Pay via UPI</a></li>").join("") : "<li>All settled.</li>";
 }
 $("mf").onsubmit = async e => { e.preventDefault(); await post("/api/members", Object.fromEntries(new FormData(e.target))); e.target.reset(); load(); };
 $("ef").onsubmit = async e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); f.payer_id = +f.payer_id; await post("/api/expenses", f); e.target.reset(); load(); };
