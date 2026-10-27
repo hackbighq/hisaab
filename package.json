@@ -1,22 +1,23 @@
 {
   "name": "hisaab",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "vitest",
-    "dev": "wrangler dev",
-    "check": "tsc --noEmit"
+    "setup": "wrangler d1 migrations apply hisaab --local",
+    "dev": "npm run setup && wrangler dev --local",
+    "test": "vitest --run",
+    "check": "tsc --noEmit && tsc --noEmit -p demo",
+    "build:demo": "node demo/build.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "Split trip and flat expenses, settle up with UPI links. Built on camera in Hackbig Builder Sessions ep 1.",
   "dependencies": {
     "hono": "^4.13.14"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
     "vitest": "^4.1.12",
-    "wrangler": "^4.152.0"
-  }
+    "wrangler": "^4.152.0",
+    "esbuild": "^0.25.12"
+  },
+  "private": true
 }

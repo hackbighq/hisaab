@@ -1,7 +1,9 @@
-export const page = `<!doctype html>
+// One HTML page, no build step. `nonce` matches the Content-Security-Policy header (index.ts);
+// `banner` is set by the browser-only demo build (demo/build.mjs).
+export const page = ({ nonce = "", banner = "" }: { nonce?: string; banner?: string } = {}) => `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hisaab</title>
-<style>
+<style${nonce ? ` nonce="${nonce}"` : ""}>
   body { font: 16px system-ui, sans-serif; background: #0d1117; color: #e6edf3; margin: 0; }
   main { max-width: 720px; margin: 0 auto; padding: 24px; }
   h1 { color: #ffb000; margin: 0 0 4px; } .sub { color: #8b949e; margin: 0 0 20px; }
@@ -11,23 +13,32 @@ export const page = `<!doctype html>
   button { background: #ffb000; color: #111; border: 0; font-weight: 700; cursor: pointer; }
   form { display: flex; gap: 8px; flex-wrap: wrap; } li { margin: 6px 0; }
   .pos { color: #3fb950; } .neg { color: #f85149; }
+  .demo { background: #3d2e00; color: #ffd76a; border: 1px solid #6b5200; border-radius: 8px; padding: 8px 12px; margin: 0 0 16px; font-size: 14px; }
+  .demo a { color: inherit; } #msg { color: #f85149; min-height: 1.2em; margin: 0 0 8px; }
   a.pay { display: inline-block; background: #238636; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; margin-left: 8px; }
 </style></head>
 <body><main>
-<h1>Hisaab</h1><p class="sub">Trip and flat expenses. Settle up with UPI.</p>
+${banner ? `<p class="demo">${banner}</p>` : ""}
+<h1>Hisaab</h1><p class="sub">Trip and flat expenses. Settle up with UPI.</p><p id="msg"></p>
 <section><h2>Members</h2>
-  <form id="mf"><input name="name" placeholder="Name" required><input name="upi" placeholder="name@upi" required><button>Add</button></form>
+  <form id="mf"><input name="name" placeholder="Name" maxlength="40" required><input name="upi" placeholder="name@upi" maxlength="60" required><button>Add</button></form>
   <ul id="members"></ul></section>
 <section><h2>Add expense</h2>
-  <form id="ef"><select name="payer_id" id="payer"></select><input name="amount" placeholder="Amount (₹)" required>
-  <input name="note" placeholder="What for?"><button>Add</button></form>
+  <form id="ef"><select name="payer_id" id="payer"></select><input name="amount" placeholder="Amount (₹)" inputmode="decimal" maxlength="10" required>
+  <input name="note" placeholder="What for?" maxlength="80"><button>Add</button></form>
   <ul id="expenses"></ul></section>
 <section><h2>Settle up</h2><ul id="plan"></ul></section>
 </main>
-<script>
+<script${nonce ? ` nonce="${nonce}"` : ""}>
 const $ = id => document.getElementById(id);
+// The XSS fix from the video: names, UPI ids and notes are typed by users, and we build HTML
+// with innerHTML. Without esc(), a name like <img src=x onerror=alert(1)> runs as code.
+// Escaping & < > " ' turns them into harmless text. (A strict CSP is the second layer.)
 const esc = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
-const post = (url, body) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const post = async (url, body) => {
+  const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  $("msg").textContent = r.ok ? "" : ((await r.json().catch(() => ({}))).error || "Something went wrong");
+};
 async function load() {
   const s = await (await fetch("/api/state")).json();
   $("members").innerHTML = s.balances.map(b =>
@@ -41,3 +52,4 @@ $("mf").onsubmit = async e => { e.preventDefault(); await post("/api/members", O
 $("ef").onsubmit = async e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); f.payer_id = +f.payer_id; await post("/api/expenses", f); e.target.reset(); load(); };
 load();
 </script></body></html>`;
+

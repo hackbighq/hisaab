@@ -1,0 +1,12 @@
+// "Open in GitHub Codespaces": installs dependencies, creates the local D1 database and starts
+// `wrangler dev` (local only, no Cloudflare account needed). Runs on your own Codespaces quota.
+{
+  "name": "Hisaab (local only)",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "containerEnv": { "WRANGLER_SEND_METRICS": "false" },
+  "postCreateCommand": "npm ci && npm run setup",
+  "postAttachCommand": "npm run dev -- --ip 0.0.0.0",
+  "forwardPorts": [8787],
+  "portsAttributes": { "8787": { "label": "Hisaab", "onAutoForward": "openPreview" } },
+  "customizations": { "codespaces": { "openFiles": ["README.md", "src/money.ts"] } }
+}

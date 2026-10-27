@@ -1,8 +1,10 @@
+// Local-run config: `npm run dev` runs the Worker and a local D1 (SQLite) on your machine.
+// Nothing here points at any Cloudflare account; database_id is a placeholder.
 {
-  "name": "hisaab-demo",
+  "name": "hisaab-local",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "d1_databases": [
-    { "binding": "DB", "database_name": "hisaab", "database_id": "local-only", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "hisaab", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
   ]
 }
